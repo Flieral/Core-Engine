@@ -40,6 +40,12 @@ module.exports = {
     return true
   },
 
+  inputPresence: function (input, whiteList) {
+    if (whiteList.indexOf(input) <= -1)
+      return false
+    return true
+  },
+
   generateUniqueHashID: function () {
     return uuid.v4()
   }
