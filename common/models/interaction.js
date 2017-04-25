@@ -189,4 +189,25 @@ module.exports = function (interaction) {
     }
   })
 
+  interaction.bestRated = function (cb) {
+    raccoon.bestRated().then((results) => {
+      return cb(null, results)
+    })    
+  }
+
+  interaction.remoteMethod('bestRated', {
+    accepts: [],
+    description: 'return bast rated contents representing global ranking',
+    http: {
+      path: '/bestRated',
+      verb: 'GET',
+      status: 200,
+      errorStatus: 400
+    },
+    returns: {
+      arg: 'response',
+      type: 'object'
+    }
+  })
+
 }
