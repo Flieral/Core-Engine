@@ -131,4 +131,33 @@ module.exports = function (interaction) {
     }
   })
 
+  interaction.mostSimilarUsers = function (userId, cb) {
+    raccoon.mostSimilarUsers(userId).then((results) => {
+      return cb(null, results)
+    })    
+  }
+
+  interaction.remoteMethod('mostSimilarUsers', {
+    accepts: [{
+        arg: 'userId',
+        type: 'string',
+        required: true,
+        http: {
+          source: 'query'
+        }
+      }
+    ],
+    description: 'set input reaction for this particualr user',
+    http: {
+      path: '/mostSimilarUsers',
+      verb: 'GET',
+      status: 200,
+      errorStatus: 400
+    },
+    returns: {
+      arg: 'response',
+      type: 'object'
+    }
+  })
+
 }
