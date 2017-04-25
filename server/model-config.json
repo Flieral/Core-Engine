@@ -36,5 +36,9 @@
   "Role": {
     "dataSource": "db",
     "public": false
+  },
+  "client": {
+    "dataSource": "mongoDs",
+    "public": true
   }
 }
