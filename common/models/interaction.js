@@ -81,7 +81,7 @@ module.exports = function (interaction) {
         }
       }
     ],
-    description: 'set input reaction for this particualr user',
+    description: 'set input reaction for a particualr user',
     http: {
       path: '/inputReactions',
       verb: 'POST',
@@ -118,7 +118,7 @@ module.exports = function (interaction) {
         }
       }
     ],
-    description: 'return recommendations for a particular user',
+    description: 'returns an ranked sorted array of contentIds representing the top recommendations for that a user',
     http: {
       path: '/recommendFor',
       verb: 'GET',
@@ -146,7 +146,7 @@ module.exports = function (interaction) {
         source: 'query'
       }
     }],
-    description: 'return most similar users to a particular user',
+    description: 'returns an array of the similarityZSet set for a user representing their ranked similarity to other users',
     http: {
       path: '/mostSimilarUsers',
       verb: 'GET',
@@ -174,7 +174,7 @@ module.exports = function (interaction) {
         source: 'query'
       }
     }],
-    description: 'return least similar users to a particular user',
+    description: 'same as mostSimilarUsers but the opposite',
     http: {
       path: '/leastSimilarUsers',
       verb: 'GET',
@@ -195,7 +195,7 @@ module.exports = function (interaction) {
 
   interaction.remoteMethod('bestRated', {
     accepts: [],
-    description: 'return bast rated contents representing global ranking',
+    description: 'returns an array of the scoreboard sorted set which represents the global ranking of contents',
     http: {
       path: '/bestRated',
       verb: 'GET',
@@ -216,7 +216,7 @@ module.exports = function (interaction) {
 
   interaction.remoteMethod('worstRated', {
     accepts: [],
-    description: 'return worst rated contents representing global ranking in reverse',
+    description: 'same as bestRated but in reverse',
     http: {
       path: '/worstRated',
       verb: 'GET',
@@ -237,7 +237,7 @@ module.exports = function (interaction) {
 
   interaction.remoteMethod('mostLiked', {
     accepts: [],
-    description: 'returns an array of the mostLiked sorted set which represents the global number of likes for all the items. does not factor in dislikes',
+    description: 'returns an array of the mostliked set representing the global number of likes',
     http: {
       path: '/mostLiked',
       verb: 'GET',
@@ -258,7 +258,7 @@ module.exports = function (interaction) {
 
   interaction.remoteMethod('mostDisliked', {
     accepts: [],
-    description: 'returns an array of the mostDisliked sorted set which represents the global number of dislikes for all the items. does not factor in likes',
+    description: 'returns an array of the mostDisliked set representing the global number of dislikes',
     http: {
       path: '/mostDisliked',
       verb: 'GET',
@@ -286,7 +286,7 @@ module.exports = function (interaction) {
         source: 'query'
       }
     }],
-    description: 'returns an array which lists all the users who liked that item',
+    description: 'returns an array which lists all the users who liked that content',
     http: {
       path: '/likedBy',
       verb: 'GET',
@@ -314,7 +314,7 @@ module.exports = function (interaction) {
         source: 'query'
       }
     }],
-    description: 'returns the number of users who have liked that item',
+    description: 'returns the number of users who have liked that content',
     http: {
       path: '/likedCount',
       verb: 'GET',
@@ -342,7 +342,7 @@ module.exports = function (interaction) {
         source: 'query'
       }
     }],
-    description: 'returns an array which lists all the users who disliked that item',
+    description: 'returns an array which lists all the users who disliked that content',
     http: {
       path: '/dislikedBy',
       verb: 'GET',
@@ -370,7 +370,7 @@ module.exports = function (interaction) {
         source: 'query'
       }
     }],
-    description: 'returns the number of users who have disliked that item',
+    description: 'returns the number of users who have disliked that content',
     http: {
       path: '/dislikedCount',
       verb: 'GET',
@@ -398,7 +398,7 @@ module.exports = function (interaction) {
         source: 'query'
       }
     }],
-    description: 'returns an array of all the items that user has liked',
+    description: 'returns an array of all the contents that user has liked',
     http: {
       path: '/allLikedFor',
       verb: 'GET',
@@ -426,7 +426,7 @@ module.exports = function (interaction) {
         source: 'query'
       }
     }],
-    description: 'returns an array of all the items that user has disliked',
+    description: 'returns an array of all the contents that user has disliked',
     http: {
       path: '/allDislikedFor',
       verb: 'GET',
@@ -454,7 +454,7 @@ module.exports = function (interaction) {
         source: 'query'
       }
     }],
-    description: 'returns an array of all the items that user has liked or disliked',
+    description: 'returns an array of all the contents that user has liked or disliked',
     http: {
       path: '/allWatchedFor',
       verb: 'GET',
