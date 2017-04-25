@@ -299,4 +299,32 @@ module.exports = function (interaction) {
     }
   })
 
+  interaction.likedCount = function (contentId, cb) {
+    raccoon.likedCount(contentId).then((results) => {
+      return cb(null, results)
+    })
+  }
+
+  interaction.remoteMethod('likedCount', {
+    accepts: [{
+      arg: 'contentId',
+      type: 'string',
+      required: true,
+      http: {
+        source: 'query'
+      }
+    }],
+    description: 'returns the number of users who have liked that item',
+    http: {
+      path: '/likedCount',
+      verb: 'GET',
+      status: 200,
+      errorStatus: 400
+    },
+    returns: {
+      arg: 'response',
+      type: 'object'
+    }
+  })
+
 }
