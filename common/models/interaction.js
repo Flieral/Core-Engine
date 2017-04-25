@@ -94,4 +94,41 @@ module.exports = function (interaction) {
     }
   })
 
+  interaction.recommendFor = function (userId, numberOfRecs, cb) {
+    raccoon.recommendFor(userId, numberOfRecs).then((results) => {
+      return cb(null, results)
+    })    
+  }
+
+  interaction.remoteMethod('recommendFor', {
+    accepts: [{
+        arg: 'userId',
+        type: 'string',
+        required: true,
+        http: {
+          source: 'query'
+        }
+      },
+      {
+        arg: 'numberOfRecs',
+        type: 'number',
+        required: true,
+        http: {
+          source: 'query'
+        }
+      }
+    ],
+    description: 'set input reaction for this particualr user',
+    http: {
+      path: '/recommendFor',
+      verb: 'GET',
+      status: 200,
+      errorStatus: 400
+    },
+    returns: {
+      arg: 'response',
+      type: 'object'
+    }
+  })
+
 }
