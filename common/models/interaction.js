@@ -231,4 +231,25 @@ module.exports = function (interaction) {
     }
   })
 
+  interaction.mostLiked = function (cb) {
+    raccoon.mostLiked().then((results) => {
+      return cb(null, results)
+    })    
+  }
+
+  interaction.remoteMethod('mostLiked', {
+    accepts: [],
+    description: 'returns an array of the mostLiked sorted set which represents the global number of likes for all the items. does not factor in dislikes',
+    http: {
+      path: '/mostLiked',
+      verb: 'GET',
+      status: 200,
+      errorStatus: 400
+    },
+    returns: {
+      arg: 'response',
+      type: 'object'
+    }
+  })
+
 }
