@@ -355,4 +355,32 @@ module.exports = function (interaction) {
     }
   })
 
+  interaction.dislikedCount = function (contentId, cb) {
+    raccoon.dislikedCount(contentId).then((results) => {
+      return cb(null, results)
+    })
+  }
+
+  interaction.remoteMethod('dislikedCount', {
+    accepts: [{
+      arg: 'contentId',
+      type: 'string',
+      required: true,
+      http: {
+        source: 'query'
+      }
+    }],
+    description: 'returns the number of users who have disliked that item',
+    http: {
+      path: '/dislikedCount',
+      verb: 'GET',
+      status: 200,
+      errorStatus: 400
+    },
+    returns: {
+      arg: 'response',
+      type: 'object'
+    }
+  })
+
 }
