@@ -438,5 +438,33 @@ module.exports = function (interaction) {
       type: 'object'
     }
   })
-  
+
+  interaction.allWatchedFor = function (userId, cb) {
+    raccoon.allWatchedFor(UserId).then((results) => {
+      return cb(null, results)
+    })
+  }
+
+  interaction.remoteMethod('allWatchedFor', {
+    accepts: [{
+      arg: 'userId',
+      type: 'string',
+      required: true,
+      http: {
+        source: 'query'
+      }
+    }],
+    description: 'returns an array of all the items that user has liked or disliked',
+    http: {
+      path: '/allWatchedFor',
+      verb: 'GET',
+      status: 200,
+      errorStatus: 400
+    },
+    returns: {
+      arg: 'response',
+      type: 'object'
+    }
+  })
+
 }
