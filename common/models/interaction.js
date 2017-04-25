@@ -118,7 +118,7 @@ module.exports = function (interaction) {
         }
       }
     ],
-    description: 'set input reaction for this particualr user',
+    description: 'return recommendations for a particular user',
     http: {
       path: '/recommendFor',
       verb: 'GET',
@@ -147,9 +147,38 @@ module.exports = function (interaction) {
         }
       }
     ],
-    description: 'set input reaction for this particualr user',
+    description: 'return most similar users to a particular user',
     http: {
       path: '/mostSimilarUsers',
+      verb: 'GET',
+      status: 200,
+      errorStatus: 400
+    },
+    returns: {
+      arg: 'response',
+      type: 'object'
+    }
+  })
+
+  interaction.leastSimilarUsers = function (userId, cb) {
+    raccoon.leastSimilarUsers(userId).then((results) => {
+      return cb(null, results)
+    })    
+  }
+
+  interaction.remoteMethod('leastSimilarUsers', {
+    accepts: [{
+        arg: 'userId',
+        type: 'string',
+        required: true,
+        http: {
+          source: 'query'
+        }
+      }
+    ],
+    description: 'return least similar users to a particular user',
+    http: {
+      path: '/leastSimilarUsers',
       verb: 'GET',
       status: 200,
       errorStatus: 400
