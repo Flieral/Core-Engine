@@ -383,4 +383,32 @@ module.exports = function (interaction) {
     }
   })
 
+  interaction.allLikedFor = function (userId, cb) {
+    raccoon.allLikedFor(UserId).then((results) => {
+      return cb(null, results)
+    })
+  }
+
+  interaction.remoteMethod('allLikedFor', {
+    accepts: [{
+      arg: 'userId',
+      type: 'string',
+      required: true,
+      http: {
+        source: 'query'
+      }
+    }],
+    description: 'returns an array of all the items that user has liked',
+    http: {
+      path: '/allLikedFor',
+      verb: 'GET',
+      status: 200,
+      errorStatus: 400
+    },
+    returns: {
+      arg: 'response',
+      type: 'object'
+    }
+  })
+
 }
