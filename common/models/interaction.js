@@ -210,4 +210,25 @@ module.exports = function (interaction) {
     }
   })
 
+  interaction.worstRated = function (cb) {
+    raccoon.worstRated().then((results) => {
+      return cb(null, results)
+    })    
+  }
+
+  interaction.remoteMethod('worstRated', {
+    accepts: [],
+    description: 'return worst rated contents representing global ranking in reverse',
+    http: {
+      path: '/worstRated',
+      verb: 'GET',
+      status: 200,
+      errorStatus: 400
+    },
+    returns: {
+      arg: 'response',
+      type: 'object'
+    }
+  })
+
 }
