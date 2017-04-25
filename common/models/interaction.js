@@ -97,7 +97,7 @@ module.exports = function (interaction) {
   interaction.recommendFor = function (userId, numberOfRecs, cb) {
     raccoon.recommendFor(userId, numberOfRecs).then((results) => {
       return cb(null, results)
-    })    
+    })
   }
 
   interaction.remoteMethod('recommendFor', {
@@ -134,19 +134,18 @@ module.exports = function (interaction) {
   interaction.mostSimilarUsers = function (userId, cb) {
     raccoon.mostSimilarUsers(userId).then((results) => {
       return cb(null, results)
-    })    
+    })
   }
 
   interaction.remoteMethod('mostSimilarUsers', {
     accepts: [{
-        arg: 'userId',
-        type: 'string',
-        required: true,
-        http: {
-          source: 'query'
-        }
+      arg: 'userId',
+      type: 'string',
+      required: true,
+      http: {
+        source: 'query'
       }
-    ],
+    }],
     description: 'return most similar users to a particular user',
     http: {
       path: '/mostSimilarUsers',
@@ -163,19 +162,18 @@ module.exports = function (interaction) {
   interaction.leastSimilarUsers = function (userId, cb) {
     raccoon.leastSimilarUsers(userId).then((results) => {
       return cb(null, results)
-    })    
+    })
   }
 
   interaction.remoteMethod('leastSimilarUsers', {
     accepts: [{
-        arg: 'userId',
-        type: 'string',
-        required: true,
-        http: {
-          source: 'query'
-        }
+      arg: 'userId',
+      type: 'string',
+      required: true,
+      http: {
+        source: 'query'
       }
-    ],
+    }],
     description: 'return least similar users to a particular user',
     http: {
       path: '/leastSimilarUsers',
@@ -192,7 +190,7 @@ module.exports = function (interaction) {
   interaction.bestRated = function (cb) {
     raccoon.bestRated().then((results) => {
       return cb(null, results)
-    })    
+    })
   }
 
   interaction.remoteMethod('bestRated', {
@@ -213,7 +211,7 @@ module.exports = function (interaction) {
   interaction.worstRated = function (cb) {
     raccoon.worstRated().then((results) => {
       return cb(null, results)
-    })    
+    })
   }
 
   interaction.remoteMethod('worstRated', {
@@ -234,7 +232,7 @@ module.exports = function (interaction) {
   interaction.mostLiked = function (cb) {
     raccoon.mostLiked().then((results) => {
       return cb(null, results)
-    })    
+    })
   }
 
   interaction.remoteMethod('mostLiked', {
@@ -255,7 +253,7 @@ module.exports = function (interaction) {
   interaction.mostDisliked = function (cb) {
     raccoon.mostDisliked().then((results) => {
       return cb(null, results)
-    })    
+    })
   }
 
   interaction.remoteMethod('mostDisliked', {
@@ -263,6 +261,34 @@ module.exports = function (interaction) {
     description: 'returns an array of the mostDisliked sorted set which represents the global number of dislikes for all the items. does not factor in likes',
     http: {
       path: '/mostDisliked',
+      verb: 'GET',
+      status: 200,
+      errorStatus: 400
+    },
+    returns: {
+      arg: 'response',
+      type: 'object'
+    }
+  })
+
+  interaction.likedBy = function (contentId, cb) {
+    raccoon.likedBy(contentId).then((results) => {
+      return cb(null, results)
+    })
+  }
+
+  interaction.remoteMethod('likedBy', {
+    accepts: [{
+      arg: 'contentId',
+      type: 'string',
+      required: true,
+      http: {
+        source: 'query'
+      }
+    }],
+    description: 'returns an array which lists all the users who liked that item',
+    http: {
+      path: '/likedBy',
       verb: 'GET',
       status: 200,
       errorStatus: 400
