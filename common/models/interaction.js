@@ -411,4 +411,32 @@ module.exports = function (interaction) {
     }
   })
 
+  interaction.allDislikedFor = function (userId, cb) {
+    raccoon.allDislikedFor(UserId).then((results) => {
+      return cb(null, results)
+    })
+  }
+
+  interaction.remoteMethod('allDislikedFor', {
+    accepts: [{
+      arg: 'userId',
+      type: 'string',
+      required: true,
+      http: {
+        source: 'query'
+      }
+    }],
+    description: 'returns an array of all the items that user has disliked',
+    http: {
+      path: '/allDislikedFor',
+      verb: 'GET',
+      status: 200,
+      errorStatus: 400
+    },
+    returns: {
+      arg: 'response',
+      type: 'object'
+    }
+  })
+  
 }
