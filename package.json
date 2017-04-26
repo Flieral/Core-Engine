@@ -18,7 +18,7 @@
     "loopback-component-explorer": "^4.0.0",
     "loopback-connector-mongodb": "^1.18.1",
     "loopback-datasource-juggler": "^3.2.0",
-    "raccoon": "^0.2.8",
+    "raccoon": "https://github.com/MrWooJ/recommendationRaccoon/tarball/Feature-Report-Share",
     "redis": "^2.7.1",
     "serve-favicon": "^2.0.1",
     "strong-error-handler": "^1.0.1",
