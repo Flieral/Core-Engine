@@ -28,7 +28,7 @@ module.exports = function (interaction) {
   })
 
   interaction.inputReactions = function (userId, contentId, interactionType, cb) {
-    var whiteList = ['liked', 'disliked', 'unliked', 'undisliked']
+    var whiteList = ['liked', 'disliked', 'unliked', 'undisliked', 'reported', 'shared']
     if (!utility.inputPresence(interactionType, whiteList))
       return cb(new Error('White List Error! Allowed Parameters: ' + whiteList.toString()), null)
     switch (interactionType) {
@@ -50,6 +50,16 @@ module.exports = function (interaction) {
       case 'undisliked':
         raccoon.undisliked(userId, contentId).then(() => {
           return cb(null, '[undisliked] Successful: Content (' + contentId + ') By User (' + userId + ')')
+        })
+        break
+      case 'reported':
+        raccoon.reported(userId, contentId).then(() => {
+          return cb(null, '[reported] Successful: Content (' + contentId + ') By User (' + userId + ')')
+        })
+        break
+      case 'shared':
+        raccoon.shared(userId, contentId).then(() => {
+          return cb(null, '[shared] Successful: Content (' + contentId + ') By User (' + userId + ')')
         })
         break
     }
