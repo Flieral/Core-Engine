@@ -435,6 +435,34 @@ module.exports = function (interaction) {
     }
   })
 
+  interaction.reportedBy = function (contentId, cb) {
+    raccoon.reportedBy(contentId).then((results) => {
+      return cb(null, results)
+    })
+  }
+
+  interaction.remoteMethod('reportedBy', {
+    accepts: [{
+      arg: 'contentId',
+      type: 'string',
+      required: true,
+      http: {
+        source: 'query'
+      }
+    }],
+    description: 'returns an array which lists all the users who reported that content',
+    http: {
+      path: '/reportedBy',
+      verb: 'GET',
+      status: 200,
+      errorStatus: 400
+    },
+    returns: {
+      arg: 'response',
+      type: 'object'
+    }
+  })
+
   interaction.allLikedFor = function (userId, cb) {
     raccoon.allLikedFor(UserId).then((results) => {
       return cb(null, results)
