@@ -491,6 +491,34 @@ module.exports = function (interaction) {
     }
   })
   
+  interaction.sharedBy = function (contentId, cb) {
+    raccoon.sharedBy(contentId).then((results) => {
+      return cb(null, results)
+    })
+  }
+
+  interaction.remoteMethod('sharedBy', {
+    accepts: [{
+      arg: 'contentId',
+      type: 'string',
+      required: true,
+      http: {
+        source: 'query'
+      }
+    }],
+    description: 'returns an array which lists all the users who shared that content',
+    http: {
+      path: '/sharedBy',
+      verb: 'GET',
+      status: 200,
+      errorStatus: 400
+    },
+    returns: {
+      arg: 'response',
+      type: 'object'
+    }
+  })
+
   interaction.allLikedFor = function (userId, cb) {
     raccoon.allLikedFor(UserId).then((results) => {
       return cb(null, results)
