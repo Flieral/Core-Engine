@@ -281,6 +281,27 @@ module.exports = function (interaction) {
     }
   })
 
+  interaction.mostReported = function (cb) {
+    raccoon.mostReported().then((results) => {
+      return cb(null, results)
+    })
+  }
+
+  interaction.remoteMethod('mostReported', {
+    accepts: [],
+    description: 'returns an array of the mostReported set representing the global number of reports',
+    http: {
+      path: '/mostReported',
+      verb: 'GET',
+      status: 200,
+      errorStatus: 400
+    },
+    returns: {
+      arg: 'response',
+      type: 'object'
+    }
+  })  
+  
   interaction.mostShared = function (cb) {
     raccoon.mostShared().then((results) => {
       return cb(null, results)
