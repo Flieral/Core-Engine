@@ -6,7 +6,7 @@ module.exports = function (contentManager) {
 
   var baseURL = 'http://' + config.publisherService.server + ':' + config.publisherService.port + '/api/'
 
-  contentManager.recommendFor = function (publisherHashId, applicationHashId, cb) {
+  contentManager.authorization = function (publisherHashId, applicationHashId, cb) {
     var url = utility.wrapAccessToken(baseURL + '/clients/' + publisherHashId + '/applications/' + applicationHashId, app.publisherAccessToken)
     requestHandler.getRequest(url, function (err, applicationResponse) {
       if (err)
