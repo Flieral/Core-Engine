@@ -48,5 +48,12 @@ module.exports = {
 
   generateUniqueHashID: function () {
     return uuid.v4()
+  },
+
+  wrapAccessToken: function (url, accessToken) {
+    if (url.indexOf('?') !== -1)
+      return url + '&accessToken=' + accessToken  
+    else  
+      return url + '?accessToken=' + accessToken
   }
 }  
