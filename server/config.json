@@ -18,5 +18,13 @@
       "limit": "100kb"
     },
     "cors": false
+  },
+  "publisherService" : {
+    "server" : "127.0.0.1",
+    "port" : "3005"
+  },
+  "announcerService" : {
+    "server" : "127.0.0.1",
+    "port" : "3000"
   }
 }
