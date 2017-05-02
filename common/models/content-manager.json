@@ -1,6 +1,7 @@
 {
   "name": "contentManager",
   "base": "Model",
+  "plural": "contentManager",
   "idInjection": true,
   "options": {
     "validateUpsert": true
