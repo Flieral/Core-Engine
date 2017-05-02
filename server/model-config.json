@@ -14,7 +14,7 @@
     ]
   },
   "interaction": {
-    "dataSource": null,
+    "dataSource": "mongoDs",
     "public": true
   },
   "User": {
