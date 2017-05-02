@@ -40,5 +40,9 @@
   "client": {
     "dataSource": "mongoDs",
     "public": true
+  },
+  "contentManager": {
+    "dataSource": null,
+    "public": true
   }
 }
