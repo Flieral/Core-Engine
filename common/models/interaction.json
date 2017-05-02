@@ -1,11 +1,31 @@
 {
   "name": "interaction",
   "base": "Model",
-  "idInjection": true,
+  "idInjection": false,
   "options": {
     "validateUpsert": true
   },
-  "properties": {},
+  "properties": {
+    "userId": {
+      "type": "string",
+      "required" : true,
+      "generated": false,
+      "idInjection": false,
+      "id": true
+    },
+    "applicationModel": {
+      "type": "object",
+      "required" : true
+    },
+    "pingModel": {
+      "type": "object",
+      "required" : true
+    },
+    "objectInfo": {
+      "type": "object",
+      "required" : false
+    }
+  },
   "validations": [],
   "relations": {},
   "acls": [{
@@ -30,6 +50,12 @@
       "principalId": "$everyone",
       "permission": "ALLOW",
       "property": "generateUserHashId"
+    },
+    {
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "ALLOW",
+      "property": "saveInformation"
     }
   ],
   "methods": {}
