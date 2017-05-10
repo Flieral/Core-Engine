@@ -1,21 +1,26 @@
 var utility = require('../../public/utility')
 var requestHandler = require('../../public/requestHandler')
 var config = require('../../server/config')
+var app = require('../../server/server')
+
+var statusConfig = require('../../config/status')
+var subPlanList = require('../../config/subPlan')
 
 module.exports = function (contentManager) {
 
-  var baseURL = 'http://' + config.publisherService.server + ':' + config.publisherService.port + '/api/'
+  var publisherBaseURL = 'http://' + config.publisherService.server + ':' + config.publisherService.port + '/api/'
+  var announcerBaseURL = 'http://' + config.announcerService.server + ':' + config.announcerService.port + '/api/'
 
   contentManager.authorization = function (publisherHashId, applicationHashId, cb) {
-    var url = utility.wrapAccessToken(baseURL + '/clients/' + publisherHashId + '/applications/' + applicationHashId, app.publisherAccessToken)
+    var url = utility.wrapAccessToken(publisherBaseURL + '/clients/' + publisherHashId + '/applications/' + applicationHashId, app.publisherAccessToken)
     requestHandler.getRequest(url, function (err, applicationResponse) {
       if (err)
         return cb(err, null)
-      url = utility.wrapAccessToken(baseURL + '/applications/' + applicationHashId + '/placements', app.publisherAccessToken)
+      url = utility.wrapAccessToken(publisherBaseURL + '/applications/' + applicationHashId + '/placements', app.publisherAccessToken)
       requestHandler.getRequest(url, function (err, placementsResponse) {
         if (err)
           return cb(err, null)
-        return cb (null, placementsResponse)
+        return cb(null, placementsResponse)
       })
     })
   }
