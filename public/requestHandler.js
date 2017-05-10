@@ -1,5 +1,25 @@
 var request = require('request')
 
+function requestToBackend(url, verb, payload, callback) {
+  var options = {
+    method: verb,
+    url: url,
+    preambleCRLF: true,
+    postambleCRLF: true,
+    headers: {
+      'content-type': 'application/json',
+      'accept': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  }
+
+  request(options, function (error, response, body) {
+    if (error || response.statusCode >= 400)
+      return callback(error, null)
+    return callback(null, JSON.parse(body))
+  })
+}
+
 module.exports = {
   getRequest: function (url, callback) {
     request.get(url)
@@ -12,57 +32,27 @@ module.exports = {
   },
 
   postRequest: function (url, body, callback) {
-    request.post(url, {
-        preambleCRLF: true,
-        postambleCRLF: true,
-        multipart: [{
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          body: JSON.stringify(body)
-        }]
-      })
-      .on('response', function (response) {
-        callback(null, response)
-      })
-      .on('error', function (err) {
-        callback(err, null)
-      })
+    requestToBackend(url, 'POST', body, function (err, result) {
+      if (err)
+        return callback(err, null) 
+      return callback(null, result)
+    })
   },
 
   putRequest: function (url, body, callback) {
-    request.put(url, {
-        preambleCRLF: true,
-        postambleCRLF: true,
-        multipart: [{
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          body: JSON.stringify(body)
-        }]
-      })
-      .on('response', function (response) {
-        callback(null, response)
-      })
-      .on('error', function (err) {
-        callback(err, null)
-      })
+    requestToBackend(url, 'PUT', body, function (err, result) {
+      if (err)
+        return callback(err, null) 
+      return callback(null, result)
+    })
   },
 
   deleteRequest: function (url, body, callback) {
-    request.delete(url, {
-        preambleCRLF: true,
-        postambleCRLF: true,
-        multipart: [{
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          body: JSON.stringify(body)
-        }]
-      })
-      .on('response', function (response) {
-        callback(null, response)
-      })
-      .on('error', function (err) {
-        callback(err, null)
-      })
+    requestToBackend(url, 'DELETE', body, function (err, result) {
+      if (err)
+        return callback(err, null) 
+      return callback(null, result)
+    })
   },
 
   headRequest: function (url, callback) {
