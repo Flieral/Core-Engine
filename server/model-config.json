@@ -40,5 +40,9 @@
   "client": {
     "dataSource": "mongoDs",
     "public": true
+  },
+  "statitic": {
+    "dataSource": "mongoDs",
+    "public": true
   }
 }
