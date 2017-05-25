@@ -84,8 +84,8 @@ module.exports = function (contentManager) {
 
             var style = placementsResponse.style
             var subPlan = subPlanList
-            var subcampaignApproved = statusConfig.approved
-            var campaignApproved = statusConfig.approved
+            var subcampaignStarted = statusConfig.started
+            var campaignStarted = statusConfig.started
             var category = utility.shuffleArray(placementsResponse.settingModel.category)
             var country = userModel.applicationModel.country
             var language = userModel.applicationModel.language
@@ -97,10 +97,10 @@ module.exports = function (contentManager) {
               'where': {
                 'and': [
                   {
-                    'status': campaignApproved
+                    'status': campaignStarted
                   },
                   {
-                    'subcampaignList.status': subcampaignApproved
+                    'subcampaignList.status': subcampaignStarted
                   },
                   {
                     'subcampaignList.style': style
@@ -200,10 +200,10 @@ module.exports = function (contentManager) {
                   'where': {
                     'and': [
                       {
-                        'status': campaignApproved
+                        'status': campaignStarted
                       },
                       {
-                        'subcampaignList.status': subcampaignApproved
+                        'subcampaignList.status': subcampaignStarted
                       },
                       {
                         'subcampaignList.style': style
