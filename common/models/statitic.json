@@ -10,11 +10,15 @@
       "type": "object",
       "required": true
     },
-    "campaignInfo": {
+    "actionInfo": {
       "type": "object",
       "required": true
     },
-    "appInfo": {
+    "announcerInfo": {
+      "type": "object",
+      "required": true
+    },
+    "publisherInfo": {
       "type": "object",
       "required": true
     }
