@@ -33,6 +33,14 @@ module.exports = {
     return true
   },
 
+  inputLeastChecker: function (reqInput, whiteList) {
+    var input = Object.keys(reqInput)
+    for (var i = 0; i < whiteList.length; i++)
+      if (input.indexOf(whiteList[i]) <= -1)
+        return false
+    return true
+  },
+
   JSONIterator: function (input, validator) {
     for (var i = 0; i < input.length; i++)
       if (validator.indexOf(input[i]) == -1)
