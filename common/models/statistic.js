@@ -6,6 +6,7 @@ var connectionList = require('../../config/connection.json')
 var deviceList = require('../../config/device.json')
 var eventList = require('../../config/event.json')
 var transactionStatus = require('../../config/transactionStatus.json')
+var receiptStatus = require('../../config/receiptStatus.json')
 
 var utility = require('../../public/utility.js')
 var requestHandler = require('../../public/requestHandler.js')
@@ -151,48 +152,145 @@ module.exports = function (statistic) {
     }
   })
 
-  statistic.publisherCheckout = function (accountHashId, cb) {
-    var transaction = app.model.transaction
-    var filter = {
-      'where': {
-        'and': [{
-            'publisherHashId': accountHashId
-          },
-          {
-            'status': transactionStatus.open
-          }
-        ]
-      },
-      'order': 'time DESC'
-    }
-    transaction.updateAll(filter, {'status': transactionStatus.checkout}, function(err, transactionInfo, transactionInfoCount) {
+  statistic.publisherCheckout = function (ctx, accountHashId, receiptData, cb) {
+    if (!ctx.args.options.accessToken)
+      return cb(new Error('missing accessToken'))
+    var url = utility.wrapAccessToken(publisherBaseURL + '/accessTokens/' + ctx.args.options.accessToken, app.publisherAccessToken)
+    requestHandler.getRequest(url, function (err, response) {
       if (err)
         return cb(err)
-      var model = {}
-      model.transaction.info = transactionInfo
-      model.transaction.count = transactionInfoCount
-      var url = utility.wrapAccessToken(publisherBaseURL + '/clients/' + accountHashId + '/checkout', app.publisherAccessToken)
-      requestHandler.postRequest(url, {'blob': 'blob'}, function (err, response) {
+      if (response.userId !== accountHashId)
+        return cb(new Error('not authorized: accessToken did not match user'))
+      var receipt = app.models.receipt
+      var inputReceipt = {
+        'accountHashId': accountHashId,
+        'data': receiptData,
+        'time': utility.getUnixTimeStamp(),
+        'status': receiptStatus.unchecked
+      }
+      receipt.create(inputReceipt, function(err, model) {
         if (err)
-          return next(err)
-        model.response = response
-        return cb(model)
+          return cb(err)
+        var transaction = app.model.transaction
+        var filter = {
+          'where': {
+            'and': [{
+                'publisherHashId': accountHashId
+              },
+              {
+                'status': transactionStatus.open
+              }
+            ]
+          },
+          'order': 'time DESC'
+        }
+        transaction.updateAll(filter, {'status': transactionStatus.checkout}, function(err, transactionInfo, transactionInfoCount) {
+          if (err)
+            return cb(err)
+          var model = {}
+          model.transaction.info = transactionInfo
+          model.transaction.count = transactionInfoCount
+          var url = utility.wrapAccessToken(publisherBaseURL + '/clients/' + accountHashId + '/checkout', app.publisherAccessToken)
+          requestHandler.postRequest(url, {'blob': 'blob'}, function (err, response) {
+            if (err)
+              return next(err)
+            model.response = response
+            return cb(model)
+          })
+        })
       })
     })
   }
 
   statistic.remoteMethod('publisherCheckout', {
     accepts: [{
+      arg: 'ctx',
+      type: 'object',
+      http: {
+        source: 'context'
+      }
+    }, {
       arg: 'accountHashId',
       type: 'string',
       required: true,
       http: {
         source: 'query'
       }
+    }, {
+      arg: 'receiptData',
+      type: 'object',
+      required: true,
+      http: {
+        source: 'body'
+      }
     }],
     description: 'checkout the amount of payable money for publisher',
     http: {
       path: '/publisherCheckout',
+      verb: 'POST',
+      status: 200,
+      errorStatus: 400
+    },
+    returns: {
+      arg: 'response',
+      type: 'object'
+    }
+  })
+
+  statistic.announcerCheckout = function (ctx, accountHashId, receiptData, cb) {
+    if (!ctx.args.options.accessToken)
+      return cb(new Error('missing accessToken'))
+    var url = utility.wrapAccessToken(announcerBaseURL + '/accessTokens/' + ctx.args.options.accessToken, app.announcerAccessToken)
+    requestHandler.getRequest(url, function (err, response) {
+      if (err)
+        return cb(err)
+      if (response.userId !== accountHashId)
+        return cb(new Error('not authorized: accessToken did not match user'))
+      var receipt = app.models.receipt
+      var inputReceipt = {
+        'accountHashId': accountHashId,
+        'data': receiptData,
+        'time': utility.getUnixTimeStamp(),
+        'status': receiptStatus.unchecked
+      }
+      receipt.create(inputReceipt, function(err, model) {
+        if (err)
+          return cb(err)
+        url = utility.wrapAccessToken(announcerBaseURL + '/clients/'+ accountHashId + '/doRefinement' + ctx.args.options.accessToken, app.announcerAccessToken)
+        requestHandler.postRequest(url, {'blob': 'blob'}, function (err, response) {
+          if (err)
+            return cb(err)
+          return cb('receipt recorded and refinement done')
+        })
+      })
+    })
+  }
+
+  statistic.remoteMethod('announcerCheckout', {
+    accepts: [{
+      arg: 'ctx',
+      type: 'object',
+      http: {
+        source: 'context'
+      }
+    }, {
+      arg: 'accountHashId',
+      type: 'string',
+      required: true,
+      http: {
+        source: 'query'
+      }
+    }, {
+      arg: 'receiptData',
+      type: 'object',
+      required: true,
+      http: {
+        source: 'body'
+      }
+    }],
+    description: 'checkout the amount of payable money for announcer',
+    http: {
+      path: '/announcerCheckout',
       verb: 'POST',
       status: 200,
       errorStatus: 400
