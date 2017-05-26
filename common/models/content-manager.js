@@ -10,8 +10,8 @@ var subPlanList = require('../../config/subPlan')
 
 module.exports = function (contentManager) {
 
-  var publisherBaseURL = 'http://' + config.publisherService.server + ':' + config.publisherService.port + '/api/'
-  var announcerBaseURL = 'http://' + config.announcerService.server + ':' + config.announcerService.port + '/api/'
+  var publisherBaseURL = 'http://' + config.publisherService.server + ':' + config.publisherService.port + '/api'
+  var announcerBaseURL = 'http://' + config.announcerService.server + ':' + config.announcerService.port + '/api'
 
   contentManager.authorization = function (publisherHashId, applicationHashId, cb) {
     var url = utility.wrapAccessToken(publisherBaseURL + '/clients/' + publisherHashId + '/applications/' + applicationHashId, app.publisherAccessToken)
