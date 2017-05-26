@@ -5,6 +5,7 @@ var osList = require('../../config/operatingSystem.json')
 var connectionList = require('../../config/connection.json')
 var deviceList = require('../../config/device.json')
 var eventList = require('../../config/event.json')
+var transactionStatus = require('../../config/transactionStatus.json')
 
 var utility = require('../../public/utility.js')
 var requestHandler = require('../../public/requestHandler.js')
@@ -57,7 +58,8 @@ module.exports = function (statistic) {
         "userHashId": modelInstance.userInfo.userId,
         "event": event,
         "price": price,
-        "time": modelInstance.actionInfo.time
+        "time": modelInstance.actionInfo.time,
+        "status": transactionStatus.open
       }
       transaction.create(input, function (err, instance) {
         if (err)
@@ -93,5 +95,58 @@ module.exports = function (statistic) {
         })
       }
     })
+  })
+
+  statistic.getPublisherPayble = function (accountHashId, cb) {
+    var transaction = app.model.transaction
+    var filter = {
+      'where': {
+        'and': [{
+            'publisherHashId': accountHashId
+          },
+          {
+            'status': transactionStatus.open
+          }
+        ]
+      },
+      'order': 'time DESC'
+    }
+    transaction.find(filter, function(err, result) {
+      if (err)
+        return cb(err)
+      var payable = 0
+      var ids = []
+      for (var i = 0; i < result.length; i++) {
+        payable += result[i].price
+        ids.push(result[i].id)
+      }
+      var model = {
+        'transactionIDs': ids,
+        'payable': payable
+      }
+      return cb(model)
+    })
+  }
+
+  statistic.remoteMethod('getPublisherPayble', {
+    accepts: [{
+      arg: 'accountHashId',
+      type: 'string',
+      required: true,
+      http: {
+        source: 'query'
+      }
+    }],
+    description: 'returns the amount of payable money for publisher checkout',
+    http: {
+      path: '/getPublisherPayble',
+      verb: 'GET',
+      status: 200,
+      errorStatus: 400
+    },
+    returns: {
+      arg: 'response',
+      type: 'object'
+    }
   })
 }
