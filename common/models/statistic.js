@@ -13,6 +13,7 @@ var app = require('../../server/server')
 
 module.exports = function (statistic) {
   var announcerBaseURL = 'http://' + config.announcerService.server + ':' + config.announcerService.port + '/api'
+  var publisherBaseURL = 'http://' + config.publisherService.server + ':' + config.publisherService.port + '/api'
 
   statistic.beforeRemote('create', function (ctx, modelInstance, next) {
     var userLeastList = ['userId', 'userLabel', 'country', 'language', 'device', 'os', 'connection']
@@ -141,6 +142,58 @@ module.exports = function (statistic) {
     http: {
       path: '/getPublisherPayble',
       verb: 'GET',
+      status: 200,
+      errorStatus: 400
+    },
+    returns: {
+      arg: 'response',
+      type: 'object'
+    }
+  })
+
+  statistic.publisherCheckout = function (accountHashId, cb) {
+    var transaction = app.model.transaction
+    var filter = {
+      'where': {
+        'and': [{
+            'publisherHashId': accountHashId
+          },
+          {
+            'status': transactionStatus.open
+          }
+        ]
+      },
+      'order': 'time DESC'
+    }
+    transaction.updateAll(filter, {'status': transactionStatus.checkout}, function(err, transactionInfo, transactionInfoCount) {
+      if (err)
+        return cb(err)
+      var model = {}
+      model.transaction.info = transactionInfo
+      model.transaction.count = transactionInfoCount
+      var url = utility.wrapAccessToken(publisherBaseURL + '/clients/' + accountHashId + '/checkout', app.publisherAccessToken)
+      requestHandler.postRequest(url, {'blob': 'blob'}, function (err, response) {
+        if (err)
+          return next(err)
+        model.response = response
+        return cb(model)
+      })
+    })
+  }
+
+  statistic.remoteMethod('publisherCheckout', {
+    accepts: [{
+      arg: 'accountHashId',
+      type: 'string',
+      required: true,
+      http: {
+        source: 'query'
+      }
+    }],
+    description: 'checkout the amount of payable money for publisher',
+    http: {
+      path: '/publisherCheckout',
+      verb: 'POST',
       status: 200,
       errorStatus: 400
     },
