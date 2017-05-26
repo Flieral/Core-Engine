@@ -48,6 +48,18 @@
       "principalId": "$everyone",
       "permission": "ALLOW",
       "property": "create"
+    },
+    {
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "ALLOW",
+      "property": "getPublisherPayble"
+    },
+    {
+      "principalType": "ROLE",
+      "principalId": "admin",
+      "permission": "ALLOW",
+      "property": "publisherCheckout"
     }
   ],
   "methods": {}
