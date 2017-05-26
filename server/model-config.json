@@ -41,7 +41,7 @@
     "dataSource": "mongoDs",
     "public": true
   },
-  "statitic": {
+  "statistic": {
     "dataSource": "mongoDs",
     "public": true
   },

@@ -1,5 +1,5 @@
 {
-  "name": "statitic",
+  "name": "statistic",
   "base": "PersistedModel",
   "idInjection": true,
   "options": {
