@@ -48,5 +48,9 @@
   "transaction": {
     "dataSource": "mongoDs",
     "public": true
+  },
+  "receipt": {
+    "dataSource": "mongoDs",
+    "public": true
   }
 }
