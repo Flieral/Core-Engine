@@ -1,4 +1,5 @@
 var uuid = require('uuid')
+var rwc = require('random-weighted-choice')
 
 module.exports = {
   generateQueryString: function (data) {
@@ -56,5 +57,45 @@ module.exports = {
 
   generateUniqueHashID: function () {
     return uuid.v4()
+  },
+
+  wrapAccessToken: function (url, accessToken) {
+    if (url.indexOf('?') !== -1)
+      return url + '&accessToken=' + accessToken  
+    else  
+      return url + '?accessToken=' + accessToken
+  },
+
+  wrapFilter: function (url, filter) {
+    if (url.indexOf('?') !== -1)
+      return url + '&filter=' + filter  
+    else  
+      return url + '?filter=' + filter
+  },
+
+  shuffleArray: function (array) {
+    var currentIndex = array.length, temporaryValue, randomIndex
+    while (currentIndex !== 0) {
+      randomIndex = Math.floor(Math.random() * currentIndex)
+      currentIndex -= 1
+      temporaryValue = array[currentIndex]
+      array[currentIndex] = array[randomIndex]
+      array[randomIndex] = temporaryValue
+    }
+    return array
+  },
+
+  randomEqualChance: function (array, number) {
+    var result = []
+    for (var i = 0; i < number; i++)
+      result.push(array[Math.floor(Math.random() * array.length)])
+    return result
+  },
+
+  randomNonEqualChance: function (table, number) {
+    var result = []
+    for (var i = 0; i < number; i++)
+      result.push(rwc(table))
+    return result
   }
-}  
+}

@@ -1,6 +1,8 @@
 var utility = require('../../public/utility')
 const raccoon = require('raccoon')
 
+var app = require('../../server/server')
+
 module.exports = function (interaction) {
 
   raccoon.config.nearestNeighbors = 5
@@ -677,6 +679,81 @@ module.exports = function (interaction) {
     description: 'returns an array of all the contents that user has liked or disliked',
     http: {
       path: '/allWatchedFor',
+      verb: 'GET',
+      status: 200,
+      errorStatus: 400
+    },
+    returns: {
+      arg: 'response',
+      type: 'object'
+    }
+  })
+
+  interaction.saveInformation = function (userId, information, cb) {
+    var model = {
+      userId: userId,
+      applicationModel: information.applicationModel,
+      pingModel: information.pingModel,
+      objectInfo: information.objectInfo
+    }
+
+    interaction.replaceOrCreate(model, function (err, result) {
+      if (err)
+        throw err
+      cb(null, result)
+    })
+  }
+
+  interaction.remoteMethod('saveInformation', {
+    accepts: [{
+      arg: 'userId',
+      type: 'string',
+      required: true,
+      http: {
+        source: 'query'
+      }
+    },
+    {
+      arg: 'information',
+      type: 'object',
+      required: true,
+      http: {
+        source: 'body'
+      }
+    }],
+    description: 'save (replace or create) information of a user client application',
+    http: {
+      path: '/saveInformation',
+      verb: 'PUT',
+      status: 200,
+      errorStatus: 400
+    },
+    returns: {
+      arg: 'response',
+      type: 'object'
+    }
+  })
+
+  interaction.loadInformation = function (userId, cb) {
+    interaction.findById(userId, function (err, result) {
+      if (err)
+        throw err
+      cb(null, result)
+    })
+  }
+
+  interaction.remoteMethod('loadInformation', {
+    accepts: [{
+      arg: 'userId',
+      type: 'string',
+      required: true,
+      http: {
+        source: 'query'
+      }
+    }],
+    description: 'load information of a user client application',
+    http: {
+      path: '/loadInformation',
       verb: 'GET',
       status: 200,
       errorStatus: 400
