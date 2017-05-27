@@ -41,8 +41,20 @@
     "dataSource": "mongoDs",
     "public": true
   },
+  "statistic": {
+    "dataSource": "mongoDs",
+    "public": true
+  },
+  "transaction": {
+    "dataSource": "mongoDs",
+    "public": true
+  },
+  "receipt": {
+    "dataSource": "mongoDs",
+    "public": true
+  },
   "contentManager": {
-    "dataSource": null,
+    "dataSource": "mongoDs",
     "public": true
   }
 }

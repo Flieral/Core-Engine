@@ -1,0 +1,75 @@
+{
+  "name": "transaction",
+  "base": "PersistedModel",
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "announcerHashId": {
+      "type": "string",
+      "required": true
+    },
+    "campaignHashId": {
+      "type": "string",
+      "required": true
+    },
+    "subcampaignHashId": {
+      "type": "string",
+      "required": true
+    },
+    "publisherHashId": {
+      "type": "string",
+      "required": true
+    },
+    "applicationHashId": {
+      "type": "string",
+      "required": true
+    },
+    "placementHashId": {
+      "type": "string",
+      "required": true
+    },
+    "userHashId": {
+      "type": "string",
+      "required": true
+    },
+    "event": {
+      "type": "string",
+      "required": true
+    },
+    "price": {
+      "type": "number",
+      "required": true
+    },
+    "time": {
+      "type": "string",
+      "required": true
+    },
+    "status": {
+      "type": "string",
+      "required": true      
+    }
+  },
+  "validations": [],
+  "relations": {},
+  "acls": [{
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "DENY"
+    },
+    {
+      "accessType": "*",
+      "principalType": "ROLE",
+      "principalId": "founder",
+      "permission": "ALLOW"
+    },
+    {
+      "accessType": "*",
+      "principalType": "ROLE",
+      "principalId": "admin",
+      "permission": "ALLOW"
+    }
+],
+  "methods": {}
+}
