@@ -17,12 +17,12 @@ module.exports = function (contentManager) {
     var url = utility.wrapAccessToken(publisherBaseURL + '/clients/' + publisherHashId + '/applications/' + applicationHashId, app.publisherAccessToken)
     requestHandler.getRequest(url, function (err, applicationResponse) {
       if (err)
-        return cb(err, null)
+        return cb(err)
       url = utility.wrapAccessToken(publisherBaseURL + '/applications/' + applicationHashId + '/placements', app.publisherAccessToken)
-      requestHandler.getRequest(url, function (err, placementsResponse) {
+      requestHandler.getRequest(url, function (err, placementsList[i]) {
         if (err)
-          return cb(err, null)
-        return cb(null, placementsResponse)
+          return cb(err)
+        return cb(placementsList[i])
       })
     })
   }
@@ -58,195 +58,191 @@ module.exports = function (contentManager) {
     }
   })
 
-  contentManager.requestForContent = function (placementHashIdList, userId, cb) {
+  contentManager.requestForContent = function (placementsList, userId, cb) {
     var res = []
+
+    function fillModel(entry, subcampaign, placement) {
+      var model = {
+        announcerInfo: {
+          announcerHashId: subcampaign.clientId,
+          campaignHashId: subcampaign.campaignId,
+          subcampaignHashId: subcampaign.id,
+          fileURL: subcampaign.fileURL
+        },
+        publisherInfo: {
+          publisherHashId: placement.clientId,
+          applicationHashId: placement.applicationId,
+          placementHashId: placement.id
+        }
+      }
+      entry.push(model)
+    }
 
     var interaction = app.models.interaction
     interaction.loadInformation(userId, function (err, userModel) {
       if (err)
-        return cb(err, null)
+        return cb(err)
 
       interaction.recommendFor(userId, 20, function (err, recoms) {
         if (err)
-          return cb(err, null)
+          return cb(err)
 
-        for (var i = 0; i < placementHashIdList.length; i++) {
+        for (var i = 0; i < placementsList.length; i++) {
           var offlineRes = []
           var onlineRes = []
 
-          var url = utility.wrapAccessToken(publisherBaseURL + '/placements/' + placementHashIdList[i], app.publisherAccessToken)
-          requestHandler.getRequest(url, function (err, placementsResponse) {
-            if (err)
-              return cb(err, null)
-            
-            var callbackFired = false
-            var contentCounter = 0
+          var callbackFired = false
+          var contentCounter = 0
 
-            var style = placementsResponse.style
-            var subPlan = subPlanList
-            var subcampaignStarted = statusConfig.started
-            var campaignStarted = statusConfig.started
-            var category = utility.shuffleArray(placementsResponse.settingModel.category)
-            var country = userModel.applicationModel.country
-            var language = userModel.applicationModel.language
-            var device = userModel.applicationModel.device
-            var os = userModel.applicationModel.os
-            var connection = userModel.applicationModel.connection
+          var style = placementsList[i].style
+          var subPlan = subPlanList
+          var subcampaignApproved = statusConfig.approved
+          var campaignStarted = statusConfig.started
+          var category = utility.shuffleArray(placementsList[i].settingModel.category)
+          var country = userModel.applicationModel.country
+          var language = userModel.applicationModel.language
+          var device = userModel.applicationModel.device
+          var os = userModel.applicationModel.os
+          var connection = userModel.applicationModel.connection
+          
+          var filterClause = {
+            'where': {
+              'and': [
+                {
+                  'status': campaignStarted
+                },
+                {
+                  'subcampaigns.status': subcampaignApproved
+                },
+                {
+                  'subcampaigns.style': style
+                }
+              ]
+            },
+            'include': [
+              'subcampaigns'
+            ]
+          }
+
+          url = utility.wrapAccessToken(announcerBaseURL + '/campaigns', app.announcerAccessToken)
+          url = utility.wrapFilter(url, JSON.stringify(filterClause))
+
+          requestHandler.getRequest(url, function (err, campaignsResponse) {
+            if (err)
+              return cb(err)
             
-            var filterClause = {
+            if (campaignsResponse.length == 0)
+              return cb(new Error('empty campaign response'))
+
+            var totalSubcampaigns = []
+            for (var j = 0; j < campaignsResponse.length; j++)
+              for (var k = 0; k < campaignsResponse[j].subcampaigns.length; k++)
+                totalSubcampaigns.push(campaignsResponse[j].subcampaigns[k])
+
+            var firstInputFilter = {
               'where': {
                 'and': [
                   {
-                    'status': campaignStarted
+                    'style': style
                   },
                   {
-                    'subcampaignList.status': subcampaignStarted
-                  },
-                  {
-                    'subcampaignList.style': style
-                  },
-                  {
-                    'subcampaignList.plan': {
+                    'plan': {
                       'inq': subPlan
                     }
                   },
                   {
-                    'subcampaignList.settingModel.category': {
+                    'settingModel.category': {
                       'inq': category
                     }
                   },
                   {
-                    'subcampaignList.settingModel.country': {
+                    'settingModel.country': {
                       'inq': country
                     }
                   },
                   {
-                    'subcampaignList.settingModel.language': {
+                    'settingModel.language': {
                       'inq': language
                     }
                   },
                   {
-                    'subcampaignList.settingModel.device': {
+                    'settingModel.device': {
                       'inq': device
                     }
                   },
                   {
-                    'subcampaignList.settingModel.os': {
+                    'settingModel.os': {
                       'inq': os
                     }
                   },
                   {
-                    'subcampaignList.settingModel.connection': {
+                    'settingModel.connection': {
                       'inq': connection
                     }
                   }
                 ]
-              },
-              'include': [
-                'subcampaignList'
-              ],
-              'order' : 'subcampaignList.ranking DESC'
+              }
+            }
+            var firstInputSubcampaigns = applyFilter(totalSubcampaigns, firstInputFilter)
+            fillSubcampaigns(firstInputSubcampaigns)
+
+            function fillSubcampaigns(subcampaignsList) {
+              var remaining
+              
+              function refineRandomChances(entry, inputArray, placement) {
+                for (var j = 0; j < inputArray.length; j++)
+                  fillModel(entry, inputArray[j], placement)
+              }
+
+              if (onlineRes.length < placementsList[i].onlineCapacity) {
+                var onlineMode = subcampaignsList
+                for (var j = 0; j < onlineMode.length; j++)
+                  if (recoms.indexOf(onlineMode[j].id) > 0)
+                    fillModel(onlineRes, onlineMode[j], placementsList[i])
+
+                remaining = placementsList[i].onlineCapacity - onlineRes.length
+                if (remaining > 0)
+                  refineRandomChances(onlineRes, utility.randomNonEqualChance(onlineMode, Math.floor((2 / 3) * remaining)))
+                
+                remaining = placementsList[i].onlineCapacity - onlineRes.length
+                if (remaining > 0)
+                  refineRandomChances(onlineRes, utility.randomNonEqualChance(onlineMode, Math.floor((1 / 3) * remaining)))
+              }
+
+              if (offlineRes.length < placementsList[i].offlineCapacity) {
+                var offlineMode = applyFilter(subcampaignsList, { where: { 'plan': 'CPV' } })
+                for (var j = 0; j < offlineMode.length; j++)
+                  if (recoms.indexOf(offlineMode[j].id) > 0)
+                    fillModel(offlineRes, offlineMode[j], placementsList[i])
+
+                remaining = placementsList[i].offlineCapacity - offlineRes.length
+                if (remaining > 0)
+                  refineRandomChances(offlineRes, utility.randomNonEqualChance(offlineMode, Math.floor((2 / 3) * remaining)))
+
+                remaining = placementsList[i].offlineCapacity - offlineRes.length
+                if (remaining > 0)
+                  refineRandomChances(offlineRes, utility.randomNonEqualChance(offlineMode, Math.floor((1 / 3) * remaining)))
+              }
             }
 
-            url = utility.wrapAccessToken(announcerBaseURL + '/campaigns', app.announcerAccessToken)
-            url = utility.wrapFilter(url, filterClause)
+            var yetOnlineRemaining = placementsList[i].onlineCapacity - onlineRes.length
+            var yetOfflineremaining = placementsList[i].offlineCapacity - offlineRes.length
+            if (yetOnlineRemaining > 0 || yetOfflineremaining > 0) {
+              fillSubcampaigns(totalSubcampaigns)
+            }
 
-            requestHandler.getRequest(url, function (err, campaignsResponse) {
-              if (err)
-                return cb(err, null)
-              
-              function fillSubcampaigns(campsResponse) {
-                var remaining
-                
-                if (onlineRes.length < placementsResponse.onlineCapacity) {
-                  var onlineMode = applyFilter(campsResponse, { where: { 'subcampaignList.plan': { inq: subPlan } } })
-                  for (var j = 0; j < onlineMode.length; j++)
-                    if (recoms.indexOf(onlineMode[j].subcampaignList.id) > 0)
-                      onlineRes.push(onlineMode[j].subcampaignList.id)
-
-                  remaining = placementsResponse.onlineCapacity - onlineRes.length
-
-                  if (remaining > 0)
-                    Array.prototype.push.apply(onlineRes, utility.randomNonEqualChance(onlineMode, Math.floor((2 / 3) * remaining)))
-
-                  if (remaining > 0)
-                    Array.prototype.push.apply(onlineRes, utility.randomEqualChance(onlineMode, Math.floor((1 / 3) * remaining)))
-                }
-
-                if (offlineRes.length < placementsResponse.offlineCapacity) {
-                  var offlineMode = applyFilter(campsResponse, { where: { 'subcampaignList.plan': 'CPV' } })
-                  for (var j = 0; j < offlineMode.length; j++)
-                    if (recoms.indexOf(offlineMode[j].subcampaignList.id) > 0)
-                      offlineRes.push(offlineMode[j].subcampaignList.id)
-
-                  remaining = placementsResponse.offlineCapacity - offlineRes.length
-
-                  if (remaining > 0)
-                    Array.prototype.push.apply(offlineRes, utility.randomNonEqualChance(offlineMode, Math.floor((2 / 3) * remaining)))
-
-                  if (remaining > 0)
-                    Array.prototype.push.apply(offlineRes, utility.randomEqualChance(offlineMode, Math.floor((1 / 3) * remaining)))
-                }
+            function fillFinalResult() {
+              var model = {
+                onlineContent: onlineRes,
+                offlineContent: offlineRes,
+                placementId: placementsList[i]
               }
+              res.push(model)
+              if (res.length == placementsList.length)
+                return cb(res)
+            }
 
-              fillSubcampaigns(campaignsResponse)
-
-              var yetOnlineRemaining = placementsResponse.onlineCapacity - onlineRes.length
-              var yetOfflineremaining = placementsResponse.offlineCapacity - offlineRes.length
-              var innerCallback = false
-              if (yetOnlineRemaining > 0 || yetOfflineremaining > 0) {
-                innerCallback = true
-                var baseFilterClause = {
-                  'where': {
-                    'and': [
-                      {
-                        'status': campaignStarted
-                      },
-                      {
-                        'subcampaignList.status': subcampaignStarted
-                      },
-                      {
-                        'subcampaignList.style': style
-                      }
-                    ]
-                  },
-                  'include': [
-                    'subcampaignList'
-                  ],
-                  'order' : 'subcampaignList.ranking DESC'
-                }
-                url = utility.wrapAccessToken(announcerBaseURL + '/campaigns', app.announcerAccessToken)
-                url = utility.wrapFilter(url, baseFilterClause)
-
-                requestHandler.getRequest(url, function (err, yetCampaignsResponse) {
-                  if (err)
-                    return cb(err, null)
-                  
-                  fillSubcampaigns(yetCampaignsResponse)
-                  var model = {
-                    onlineContent: onlineRes,
-                    offlineContent: offlineRes,
-                    placementId: placementHashIdList[i]
-                  }
-                  res.push(model)
-
-                  if (res.length == placementHashIdList.length)
-                    return cb(null, res)
-                })
-              }
-              
-              if (!innerCallback) {
-                var model = {
-                  onlineContent: onlineRes,
-                  offlineContent: offlineRes,
-                  placementId: placementHashIdList[i]
-                }
-                res.push(model)
-
-                if (res.length == placementHashIdList.length)
-                  return cb(null, res)
-              }
-            })
+            fillFinalResult()
           })
         }
       })
@@ -255,8 +251,8 @@ module.exports = function (contentManager) {
 
   contentManager.remoteMethod('requestForContent', {
     accepts: [{
-      arg: 'placementHashIdList',
-      type: 'object',
+      arg: 'placementsList',
+      type: 'array',
       required: true,
       http: {
         source: 'body'
