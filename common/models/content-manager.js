@@ -107,17 +107,7 @@ module.exports = function (contentManager) {
           
           var filterClause = {
             'where': {
-              'and': [
-                {
-                  'status': campaignStarted
-                },
-                {
-                  'subcampaigns.status': subcampaignApproved
-                },
-                {
-                  'subcampaigns.style': style
-                }
-              ]
+              'status': campaignStarted
             },
             'include': [
               'subcampaigns'
@@ -142,6 +132,9 @@ module.exports = function (contentManager) {
             var firstInputFilter = {
               'where': {
                 'and': [
+                  {
+                    'status': subcampaignApproved
+                  },
                   {
                     'style': style
                   },
