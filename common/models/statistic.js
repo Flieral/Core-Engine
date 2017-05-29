@@ -10,7 +10,9 @@ var receiptStatus = require('../../config/receiptStatus.json')
 
 var utility = require('../../public/utility.js')
 var requestHandler = require('../../public/requestHandler.js')
+
 var app = require('../../server/server')
+var config = require('../../server/config')
 
 module.exports = function (statistic) {
   var announcerBaseURL = 'http://' + config.announcerService.server + ':' + config.announcerService.port + '/api'
@@ -96,6 +98,8 @@ module.exports = function (statistic) {
             doTransaction('View', subcampaign.price)
         })
       }
+      else
+        return next()
     })
   })
 
