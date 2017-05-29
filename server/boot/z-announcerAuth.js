@@ -5,8 +5,8 @@ module.exports = function (app) {
   var baseURL = 'http://' + config.announcerService.server + ':' + config.announcerService.port + '/api/'
   
   var user = {
-    email: 'Support@Flieral.com',
-    password: 'Fl13r4lSupportPass'
+    'email': 'support@flieral.com',
+    'password': 'Fl13r4lSupportPass'
   }
 
   var url = baseURL + 'clients/login'  
