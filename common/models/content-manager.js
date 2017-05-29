@@ -19,10 +19,10 @@ module.exports = function (contentManager) {
       if (err)
         return cb(err)
       url = utility.wrapAccessToken(publisherBaseURL + '/applications/' + applicationHashId + '/placements', app.publisherAccessToken)
-      requestHandler.getRequest(url, function (err, placementsList[i]) {
+      requestHandler.getRequest(url, function (err, placementsList) {
         if (err)
           return cb(err)
-        return cb(placementsList[i])
+        return cb(placementsList)
       })
     })
   }
