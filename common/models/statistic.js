@@ -73,18 +73,14 @@ module.exports = function (statistic) {
     }
     var url = utility.wrapAccessToken(announcerBaseURL + '/campaigns/' + modelInstance.announcerInfo.campaignHashId + '/subcampaigns/' + modelInstance.announcerInfo.subcampaignHashId, app.announcerAccessToken)
     requestHandler.getRequest(url, function (err, subcampaign) {
-      if (err)
-        return next(err)
-      if (subcampaign.plan === 'CPC' && modelInstance.actionInfo.event === 'Click') {
-        doTransaction('Click', subcampaign.price)
-      } else if (subcampaign.plan === 'CPV' && modelInstance.actionInfo.event === 'View') {
+      function getStatisticModels(subcampaignHashId, event, callback) {
         var filter = {
           'where': {
             'and': [{
-                'announcerInfo.subcampaignHashId': modelInstance.announcerInfo.subcampaignHashId
+                'announcerInfo.subcampaignHashId': subcampaignHashId
               },
               {
-                'actionInfo.event': 'View'
+                'actionInfo.event': event
               }
             ]
           },
@@ -92,10 +88,39 @@ module.exports = function (statistic) {
         }
         statistic.find(filter, function (err, models) {
           if (err)
+            return callback(err, null)
+          return callback(null, models)
+        })
+      }
+      function sendReportWarningEmail(publisherHashId) {
+        var url = utility.wrapAccessToken(publisherBaseURL + '/clients/' + accountHashId + '/sendReportEmail', app.publisherAccessToken)
+        requestHandler.postRequest(url, {'blob': 'blob'}, function (err, response) {
+          if (err)
+            return cb(err)
+          return cb(response)
+        }) 
+      }
+      
+      if (err)
+        return next(err)
+      if (subcampaign.plan === 'CPC' && modelInstance.actionInfo.event === 'Click') {
+        doTransaction('Click', subcampaign.price)
+      } else if (subcampaign.plan === 'CPV' && modelInstance.actionInfo.event === 'View') {
+        getStatisticModels(modelInstance.announcerInfo.subcampaignHashId, 'View', function(err, models) {
+          if (err)
             return next(err)
           var count = models.length + 1
           if (count % 100 == 0)
             doTransaction('View', subcampaign.price)
+        })
+      }
+      else if (modelInstance.actionInfo.event === 'Report') {
+        getStatisticModels(modelInstance.announcerInfo.subcampaignHashId, 'Report', function(err, models) {
+          if (err)
+            return next(err)
+          var count = models.length + 1
+          if (count % 100 == 0)
+            sendReportWarningEmail()
         })
       }
       else
@@ -197,7 +222,7 @@ module.exports = function (statistic) {
           var url = utility.wrapAccessToken(publisherBaseURL + '/clients/' + accountHashId + '/checkout', app.publisherAccessToken)
           requestHandler.postRequest(url, {'blob': 'blob'}, function (err, response) {
             if (err)
-              return next(err)
+              return cb(err)
             model.response = response
             return cb(model)
           })
