@@ -56,6 +56,12 @@
       "principalId": "$everyone",
       "permission": "ALLOW",
       "property": "saveInformation"
+    },
+    {
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "ALLOW",
+      "property": "inputReactions"
     }
   ],
   "methods": {}
