@@ -22,7 +22,7 @@ module.exports = function (contentManager) {
       requestHandler.getRequest(url, function (err, placementsList) {
         if (err)
           return cb(err)
-        return cb(placementsList)
+        return cb(null, placementsList)
       })
     })
   }
@@ -232,7 +232,7 @@ module.exports = function (contentManager) {
               }
               res.push(model)
               if (res.length == placementsList.length)
-                return cb(res)
+                return cb(null, res)
             }
 
             fillFinalResult()

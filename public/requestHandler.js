@@ -23,10 +23,11 @@ function requestToBackend(url, verb, payload, callback) {
 module.exports = {
   getRequest: function (url, callback) {
     request.get(url)
-      .on('response', function (response) {
-        callback(null, response)
+      .on('data', function(data) {
+        callback(null, JSON.parse(data))
       })
       .on('error', function (err) {
+        console.log(err);
         callback(err, null)
       })
   },

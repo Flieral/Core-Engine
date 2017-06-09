@@ -19,7 +19,7 @@ module.exports = {
   },
   
   getUnixTimeStamp: function () {
-    return Math.floor((new Date).getTime() / 1000)
+    return Math.floor((new Date).getTime())
   },
 
   stringReplace: function (source, find, replace) {
@@ -61,9 +61,9 @@ module.exports = {
 
   wrapAccessToken: function (url, accessToken) {
     if (url.indexOf('?') !== -1)
-      return url + '&accessToken=' + accessToken  
+      return url + '&access_token=' + accessToken  
     else  
-      return url + '?accessToken=' + accessToken
+      return url + '?access_token=' + accessToken
   },
 
   wrapFilter: function (url, filter) {

@@ -96,8 +96,8 @@ module.exports = function (statistic) {
         var url = utility.wrapAccessToken(publisherBaseURL + '/clients/' + accountHashId + '/sendReportEmail', app.publisherAccessToken)
         requestHandler.postRequest(url, {'blob': 'blob'}, function (err, response) {
           if (err)
-            return cb(err)
-          return cb(response)
+            return next(err)
+          return next()
         }) 
       }
       
@@ -155,7 +155,7 @@ module.exports = function (statistic) {
         'transactionIDs': ids,
         'payable': payable
       }
-      return cb(model)
+      return cb(null, model)
     })
   }
 
@@ -223,8 +223,8 @@ module.exports = function (statistic) {
           requestHandler.postRequest(url, {'blob': 'blob'}, function (err, response) {
             if (err)
               return cb(err)
-            model.response = response
-            return cb(model)
+            model.result = response.response
+            return cb(null, model)
           })
         })
       })
@@ -289,7 +289,7 @@ module.exports = function (statistic) {
         requestHandler.postRequest(url, {'blob': 'blob'}, function (err, response) {
           if (err)
             return cb(err)
-          return cb('receipt recorded and refinement done')
+          return cb(null, 'receipt recorded and refinement done')
         })
       })
     })
