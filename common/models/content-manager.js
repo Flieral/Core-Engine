@@ -87,48 +87,46 @@ module.exports = function (contentManager) {
         if (err)
           return cb(err)
 
-        for (var i = 0; i < placementsList.length; i++) {
-          var offlineRes = []
-          var onlineRes = []
+        var campaignStarted = statusConfig.started
+        var filterClause = {
+          'where': {
+            'status': campaignStarted
+          },
+          'include': [
+            'subcampaigns'
+          ]
+        }
 
-          var callbackFired = false
-          var contentCounter = 0
+        url = utility.wrapAccessToken(announcerBaseURL + '/campaigns', app.announcerAccessToken)
+        url = utility.wrapFilter(url, JSON.stringify(filterClause))
 
-          var style = placementsList[i].style
-          var subPlan = subPlanList
-          var subcampaignApproved = statusConfig.approved
-          var campaignStarted = statusConfig.started
-          var category = utility.shuffleArray(placementsList[i].settingModel.category)
-          var country = userModel.applicationModel.country
-          var language = userModel.applicationModel.language
-          var device = userModel.applicationModel.device
-          var os = userModel.applicationModel.os
-          var connection = userModel.applicationModel.connection
-          
-          var filterClause = {
-            'where': {
-              'status': campaignStarted
-            },
-            'include': [
-              'subcampaigns'
-            ]
-          }
+        requestHandler.getRequest(url, function (err, campaignsResponse) {
+          if (err)
+            return cb(err)
 
-          url = utility.wrapAccessToken(announcerBaseURL + '/campaigns', app.announcerAccessToken)
-          url = utility.wrapFilter(url, JSON.stringify(filterClause))
+          if (campaignsResponse.length == 0)
+            return cb(new Error('empty campaign response'))
 
-          requestHandler.getRequest(url, function (err, campaignsResponse) {
-            if (err)
-              return cb(err)
-            
-            if (campaignsResponse.length == 0)
-              return cb(new Error('empty campaign response'))
+          var totalSubcampaigns = []
+          for (var j = 0; j < campaignsResponse.length; j++)
+            for (var k = 0; k < campaignsResponse[j].subcampaigns.length; k++)
+              totalSubcampaigns.push(campaignsResponse[j].subcampaigns[k])
 
-            var totalSubcampaigns = []
-            for (var j = 0; j < campaignsResponse.length; j++)
-              for (var k = 0; k < campaignsResponse[j].subcampaigns.length; k++)
-                totalSubcampaigns.push(campaignsResponse[j].subcampaigns[k])
+          for (var i = 0; i < placementsList.length; i++) {
+            var placementModel = JSON.parse(JSON.stringify(placementsList[i]))
+            var offlineRes = []
+            var onlineRes = []
 
+            var style = placementModel.style
+            var subPlan = subPlanList
+            var subcampaignApproved = statusConfig.approved
+            var category = utility.shuffleArray(placementModel.settingModel.category)
+            var country = userModel.applicationModel.country
+            var language = userModel.applicationModel.language
+            var device = userModel.applicationModel.device
+            var os = userModel.applicationModel.os
+            var connection = userModel.applicationModel.connection
+              
             var firstInputFilter = {
               'where': {
                 'and': [
@@ -142,42 +140,31 @@ module.exports = function (contentManager) {
                     'plan': {
                       'inq': subPlan
                     }
-                  },
-                  {
-                    'settingModel.category': {
-                      'inq': category
-                    }
-                  },
-                  {
-                    'settingModel.country': {
-                      'inq': country
-                    }
-                  },
-                  {
-                    'settingModel.language': {
-                      'inq': language
-                    }
-                  },
-                  {
-                    'settingModel.device': {
-                      'inq': device
-                    }
-                  },
-                  {
-                    'settingModel.os': {
-                      'inq': os
-                    }
-                  },
-                  {
-                    'settingModel.connection': {
-                      'inq': connection
-                    }
                   }
                 ]
               }
             }
-            var firstInputSubcampaigns = applyFilter(totalSubcampaigns, firstInputFilter)
-            fillSubcampaigns(firstInputSubcampaigns)
+
+            var querySubcampaigns = applyFilter(totalSubcampaigns, firstInputFilter)
+            var secondInputSubcampaigns = querySubcampaigns
+            var firstInputSubcampaigns = []
+            for (var k = 0; k < querySubcampaigns.length; k++) {
+              var msub = querySubcampaigns[k]
+              if (msub.settingModel.device.indexOf(device) >= 0 && msub.settingModel.os.indexOf(os) >= 0 && msub.settingModel.connection.indexOf(connection) >= 0 && msub.settingModel.language.indexOf(language) >= 0) {
+                firstInputSubcampaigns.push(msub)
+              }
+            }
+            if (firstInputSubcampaigns.length != 0) {
+              fillSubcampaigns(firstInputSubcampaigns)
+            }
+
+            var yetOnlineRemaining = placementModel.onlineCapacity - onlineRes.length
+            var yetOfflineremaining = placementModel.offlineCapacity - offlineRes.length
+            if (yetOnlineRemaining > 0 || yetOfflineremaining > 0) {
+              fillSubcampaigns(secondInputSubcampaigns)
+            }
+
+            fillFinalResult()
 
             function fillSubcampaigns(subcampaignsList) {
               var remaining
@@ -187,57 +174,85 @@ module.exports = function (contentManager) {
                   fillModel(entry, inputArray[j], placement)
               }
 
-              if (onlineRes.length < placementsList[i].onlineCapacity) {
+              if (onlineRes.length < placementModel.onlineCapacity) {
                 var onlineMode = subcampaignsList
                 for (var j = 0; j < onlineMode.length; j++)
-                  if (recoms.indexOf(onlineMode[j].id) > 0)
-                    fillModel(onlineRes, onlineMode[j], placementsList[i])
+                  if (recoms.indexOf(onlineMode[j].id) > 0) {
+                    fillModel(onlineRes, onlineMode[j], placementModel)
+                  }
 
-                remaining = placementsList[i].onlineCapacity - onlineRes.length
-                if (remaining > 0)
-                  refineRandomChances(onlineRes, utility.randomNonEqualChance(onlineMode, Math.floor((2 / 3) * remaining)))
-                
-                remaining = placementsList[i].onlineCapacity - onlineRes.length
-                if (remaining > 0)
-                  refineRandomChances(onlineRes, utility.randomNonEqualChance(onlineMode, Math.floor((1 / 3) * remaining)))
+                remaining = placementModel.onlineCapacity - onlineRes.length
+                if (remaining > 0) {
+                  if (onlineMode.length < remaining)
+                    remaining = onlineMode.length
+                  var inp = utility.randomNonEqualChance(onlineMode, remaining)
+                  var ans = []
+                  for (var k = 0; k < inp.length; k++)
+                    for (var t = 0; t < onlineMode.length; t++)
+                      if (inp[k] === onlineMode[t].id)
+                        ans.push(onlineMode[t])
+                  refineRandomChances(onlineRes, ans, placementModel)
+                }
+
+                remaining = placementModel.onlineCapacity - onlineRes.length
+                if (remaining > 0) {
+                  if (onlineMode.length < remaining)
+                    remaining = onlineMode.length
+                  var inp = utility.randomEqualChance(onlineMode, remaining)
+                  refineRandomChances(onlineRes, inp, placementModel)
+                }
               }
 
-              if (offlineRes.length < placementsList[i].offlineCapacity) {
-                var offlineMode = applyFilter(subcampaignsList, { where: { 'plan': 'CPV' } })
-                for (var j = 0; j < offlineMode.length; j++)
-                  if (recoms.indexOf(offlineMode[j].id) > 0)
-                    fillModel(offlineRes, offlineMode[j], placementsList[i])
+              if (offlineRes.length < placementModel.offlineCapacity) {
+                var offlineMode = []
+                for (var j = 0; j < subcampaignsList.length; j++) {
+                  var msub = subcampaignsList[j]
+                  if (msub.plan === 'CPV')
+                    offlineMode.push(msub)
+                }
 
-                remaining = placementsList[i].offlineCapacity - offlineRes.length
-                if (remaining > 0)
-                  refineRandomChances(offlineRes, utility.randomNonEqualChance(offlineMode, Math.floor((2 / 3) * remaining)))
+                if (offlineMode.length > 0) {
+                  for (var j = 0; j < offlineMode.length; j++)
+                    if (recoms.indexOf(offlineMode[j].id) > 0) {
+                      fillModel(offlineRes, offlineMode[j], placementModel)
+                    }
 
-                remaining = placementsList[i].offlineCapacity - offlineRes.length
-                if (remaining > 0)
-                  refineRandomChances(offlineRes, utility.randomNonEqualChance(offlineMode, Math.floor((1 / 3) * remaining)))
+                  remaining = placementModel.offlineCapacity - offlineRes.length
+                  if (remaining > 0) {
+                    if (offlineMode.length < remaining)
+                      remaining = offlineMode.length
+                    var inp = utility.randomNonEqualChance(offlineMode, remaining)
+                    var ans = []
+                    for (var k = 0; k < inp.length; k++)
+                      for (var t = 0; t < offlineMode.length; t++)
+                        if (inp[k] === offlineMode[t].id)
+                          ans.push(offlineMode[t])
+                    refineRandomChances(offlineRes, ans, placementModel)
+                  }
+
+                  remaining = placementModel.offlineCapacity - offlineRes.length
+                  if (remaining > 0) {
+                    if (offlineMode.length < remaining)
+                      remaining = offlineMode.length
+                    var inp = utility.randomEqualChance(offlineMode, remaining)
+                    refineRandomChances(offlineRes, inp, placementModel)
+                  }
+                }
               }
-            }
-
-            var yetOnlineRemaining = placementsList[i].onlineCapacity - onlineRes.length
-            var yetOfflineremaining = placementsList[i].offlineCapacity - offlineRes.length
-            if (yetOnlineRemaining > 0 || yetOfflineremaining > 0) {
-              fillSubcampaigns(totalSubcampaigns)
             }
 
             function fillFinalResult() {
               var model = {
                 onlineContent: onlineRes,
                 offlineContent: offlineRes,
-                placementId: placementsList[i]
+                placementId: placementModel.id
               }
               res.push(model)
               if (res.length == placementsList.length)
                 return cb(null, res)
             }
-
-            fillFinalResult()
-          })
-        }
+          }
+        })
       })
     })
   }
