@@ -50,8 +50,36 @@ module.exports = function (statistic) {
   })
 
   statistic.afterRemote('create', function (ctx, modelInstance, next) {
+    function doMultiStuff(price) {
+      var announcerInput = {
+        "accountHashId": modelInstance.announcerInfo.announcerHashId,
+        "campaignHashId": modelInstance.announcerInfo.campaignHashId,
+        "subcampaignHashId": modelInstance.announcerInfo.subcampaignHashId,
+        "reduceValue": price
+      }
+      var announcerQueryStr = utility.generateQueryString(announcerInput)
+      var url = utility.wrapAccessToken(announcerBaseURL + '/subcampaigns/reduceChain?' + announcerQueryStr, app.announcerAccessToken)
+      requestHandler.postRequest(url, {'blob': 'blob'}, function (err, response) {
+        if (err)
+          return next(err)
+        var publisherInput = {
+          "accountHashId": modelInstance.publisherInfo.publisherHashId,
+          "applicationHashId": modelInstance.publisherInfo.applicationHashId,
+          "placementHashId": modelInstance.publisherInfo.placementHashId,
+          "additiveValue": response.reduceValue
+        }
+        var publisherQueryStr = utility.generateQueryString(publisherInput)
+        var url = utility.wrapAccessToken(publisherBaseURL + '/placements/additiveChain?' + announcerQueryStr, app.publisherAccessToken)
+        requestHandler.postRequest(url, {'blob': 'blob'}, function (err, response) {
+          if (err)
+            return next(err)
+          return next()
+        })
+      }) 
+    }
+
     function doTransaction(event, price) {
-      var transaction = app.model.transaction
+      var transaction = app.models.transaction
       var input = {
         "announcerHashId": modelInstance.announcerInfo.announcerHashId,
         "campaignHashId": modelInstance.announcerInfo.campaignHashId,
@@ -68,7 +96,7 @@ module.exports = function (statistic) {
       transaction.create(input, function (err, instance) {
         if (err)
           return next(err)
-        return next()
+        doMultiStuff(price)
       })
     }
     var url = utility.wrapAccessToken(announcerBaseURL + '/campaigns/' + modelInstance.announcerInfo.campaignHashId + '/subcampaigns/' + modelInstance.announcerInfo.subcampaignHashId, app.announcerAccessToken)
@@ -76,20 +104,18 @@ module.exports = function (statistic) {
       function getStatisticModels(subcampaignHashId, event, callback) {
         var filter = {
           'where': {
-            'and': [{
-                'announcerInfo.subcampaignHashId': subcampaignHashId
-              },
-              {
-                'actionInfo.event': event
-              }
-            ]
+            'actionInfo.event': event
           },
           'order': 'actionInfo.time DESC'
         }
         statistic.find(filter, function (err, models) {
           if (err)
             return callback(err, null)
-          return callback(null, models)
+          var res = []
+          for (var i = 0; i < models.length; i++)
+            if (models[i].announcerInfo.subcampaignHashId === subcampaignHashId)
+              res.push(models[i])
+          return callback(null, res)
         })
       }
       function sendReportWarningEmail(publisherHashId) {
@@ -129,16 +155,10 @@ module.exports = function (statistic) {
   })
 
   statistic.getPublisherPayble = function (accountHashId, cb) {
-    var transaction = app.model.transaction
+    var transaction = app.models.transaction
     var filter = {
       'where': {
-        'and': [{
-            'publisherHashId': accountHashId
-          },
-          {
-            'status': transactionStatus.open
-          }
-        ]
+        'status': transactionStatus.open
       },
       'order': 'time DESC'
     }
@@ -148,11 +168,13 @@ module.exports = function (statistic) {
       var payable = 0
       var ids = []
       for (var i = 0; i < result.length; i++) {
-        payable += result[i].price
-        ids.push(result[i].id)
+        if (result[i].publisherHashId === accountHashId) {
+          payable += result[i].price
+          ids.push(result[i].id)
+        }
       }
       var model = {
-        'transactionIDs': ids,
+        'transactionIds': ids,
         'payable': payable
       }
       return cb(null, model)
@@ -181,10 +203,10 @@ module.exports = function (statistic) {
     }
   })
 
-  statistic.publisherCheckout = function (ctx, accountHashId, receiptData, cb) {
-    if (!ctx.args.options.accessToken)
+  statistic.publisherCheckout = function (accessToken, accountHashId, receiptData, transactionIds, cb) {
+    if (!accessToken)
       return cb(new Error('missing accessToken'))
-    var url = utility.wrapAccessToken(publisherBaseURL + '/accessTokens/' + ctx.args.options.accessToken, app.publisherAccessToken)
+    var url = utility.wrapAccessToken(publisherBaseURL + '/clients/' + accountHashId + '/accessTokens/' + accessToken, accessToken)
     requestHandler.getRequest(url, function (err, response) {
       if (err)
         return cb(err)
@@ -200,30 +222,18 @@ module.exports = function (statistic) {
       receipt.create(inputReceipt, function(err, model) {
         if (err)
           return cb(err)
-        var transaction = app.model.transaction
-        var filter = {
-          'where': {
-            'and': [{
-                'publisherHashId': accountHashId
-              },
-              {
-                'status': transactionStatus.open
-              }
-            ]
-          },
-          'order': 'time DESC'
-        }
-        transaction.updateAll(filter, {'status': transactionStatus.checkout}, function(err, transactionInfo, transactionInfoCount) {
+        var transaction = app.models.transaction
+        transaction.updateAll({id: {inq: transactionIds.Ids}}, {'status': transactionStatus.checkout}, function(err, transactionInfo) {
           if (err)
             return cb(err)
           var model = {}
+          model.transaction = {}
           model.transaction.info = transactionInfo
-          model.transaction.count = transactionInfoCount
           var url = utility.wrapAccessToken(publisherBaseURL + '/clients/' + accountHashId + '/checkout', app.publisherAccessToken)
           requestHandler.postRequest(url, {'blob': 'blob'}, function (err, response) {
             if (err)
               return cb(err)
-            model.result = response.response
+            model.result = response
             return cb(null, model)
           })
         })
@@ -233,10 +243,10 @@ module.exports = function (statistic) {
 
   statistic.remoteMethod('publisherCheckout', {
     accepts: [{
-      arg: 'ctx',
-      type: 'object',
+      arg: 'accessTokenId',
+      type: 'string',
       http: {
-        source: 'context'
+        source: 'query'
       }
     }, {
       arg: 'accountHashId',
@@ -247,6 +257,13 @@ module.exports = function (statistic) {
       }
     }, {
       arg: 'receiptData',
+      type: 'object',
+      required: true,
+      http: {
+        source: 'body'
+      }
+    }, {
+      arg: 'transactionIds',
       type: 'object',
       required: true,
       http: {
