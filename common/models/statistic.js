@@ -66,10 +66,10 @@ module.exports = function (statistic) {
           "accountHashId": modelInstance.publisherInfo.publisherHashId,
           "applicationHashId": modelInstance.publisherInfo.applicationHashId,
           "placementHashId": modelInstance.publisherInfo.placementHashId,
-          "additiveValue": response.reduceValue
+          "additiveValue": response.response.reduceValue
         }
         var publisherQueryStr = utility.generateQueryString(publisherInput)
-        var url = utility.wrapAccessToken(publisherBaseURL + '/placements/additiveChain?' + announcerQueryStr, app.publisherAccessToken)
+        var url = utility.wrapAccessToken(publisherBaseURL + '/placements/additiveChain?' + publisherQueryStr, app.publisherAccessToken)
         requestHandler.postRequest(url, {'blob': 'blob'}, function (err, response) {
           if (err)
             return next(err)
