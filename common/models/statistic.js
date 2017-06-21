@@ -454,4 +454,62 @@ module.exports = function (statistic) {
     }
   })
 
+  statistic.getAllTransaction = function (ctx, accountHashId, isAnnouncer, cb) {
+    if (!ctx.req.accessToken)
+      return cb(new Error('missing accessToken'))
+
+    if (ctx.req.accessToken.userId !== accountHashId)
+      return cb(new Error('missmatched accountHashId'))
+
+    var transaction = app.models.transaction
+    transaction.find(function(err, result) {
+      if (err)
+        return cb(err, null)
+      var finalRes = []
+      for (var i = 0; i < result.length; i++) {
+        if (isAnnouncer && result[i].announcerHashId === accountHashId)
+          finalRes.push(result[i])
+        else if (!isAnnouncer && result[i].publisherHashId === accountHashId)
+          finalRes.push(result[i])
+      }
+      return cb(null, finalRes)
+    })
+  }
+
+  statistic.remoteMethod('getAllTransaction', {
+    accepts: [{
+      arg: 'ctx',
+      type: 'object',
+      http: {
+        source: 'context'
+      }
+    }, {
+      arg: 'accountHashId',
+      type: 'string',
+      required: true,
+      http: {
+        source: 'query'
+      }
+    }, {
+      arg: 'isAnnouncer',
+      type: 'boolean',
+      required: true,
+      default: true,
+      http: {
+        source: 'query'
+      }
+    }],
+    description: 'get all transaction of related account',
+    http: {
+      path: '/getAllTransaction',
+      verb: 'GET',
+      status: 200,
+      errorStatus: 400
+    },
+    returns: {
+      type: 'object',
+      root: true
+    }
+  })
+
 }
