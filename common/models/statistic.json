@@ -72,6 +72,12 @@
       "principalId": "$authenticated",
       "permission": "ALLOW",
       "property": "getAllReceipts"
+    },
+    {
+      "principalType": "ROLE",
+      "principalId": "$authenticated",
+      "permission": "ALLOW",
+      "property": "getAllTransactions"
     }
   ],
   "methods": {}

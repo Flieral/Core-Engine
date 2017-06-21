@@ -454,7 +454,7 @@ module.exports = function (statistic) {
     }
   })
 
-  statistic.getAllTransaction = function (ctx, accountHashId, isAnnouncer, cb) {
+  statistic.getAllTransactions = function (ctx, accountHashId, isAnnouncer, cb) {
     if (!ctx.req.accessToken)
       return cb(new Error('missing accessToken'))
 
@@ -476,7 +476,7 @@ module.exports = function (statistic) {
     })
   }
 
-  statistic.remoteMethod('getAllTransaction', {
+  statistic.remoteMethod('getAllTransactions', {
     accepts: [{
       arg: 'ctx',
       type: 'object',
@@ -501,7 +501,7 @@ module.exports = function (statistic) {
     }],
     description: 'get all transaction of related account',
     http: {
-      path: '/getAllTransaction',
+      path: '/getAllTransactions',
       verb: 'GET',
       status: 200,
       errorStatus: 400
