@@ -66,6 +66,12 @@
       "principalId": "$authenticated",
       "permission": "ALLOW",
       "property": "getAllStatistics"
+    },
+    {
+      "principalType": "ROLE",
+      "principalId": "$authenticated",
+      "permission": "ALLOW",
+      "property": "getAllReceipts"
     }
   ],
   "methods": {}

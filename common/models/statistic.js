@@ -406,4 +406,52 @@ module.exports = function (statistic) {
     }
   })
 
+  statistic.getAllReceipts = function (ctx, accountHashId, cb) {
+    if (!ctx.req.accessToken)
+      return cb(new Error('missing accessToken'))
+
+    if (ctx.req.accessToken.userId !== accountHashId)
+      return cb(new Error('missmatched accountHashId'))
+
+    var receipt = app.models.receipt
+    receipt.find(function(err, result) {
+      if (err)
+        return cb(err, null)
+      var finalRes = []
+      for (var i = 0; i < result.length; i++)
+        if (result[i].accountHashId === accountHashId) {
+          finalRes.push(result[i])
+        }
+      return cb(null, finalRes)
+    })
+  }
+
+  statistic.remoteMethod('getAllReceipts', {
+    accepts: [{
+      arg: 'ctx',
+      type: 'object',
+      http: {
+        source: 'context'
+      }
+    }, {
+      arg: 'accountHashId',
+      type: 'string',
+      required: true,
+      http: {
+        source: 'query'
+      }
+    }],
+    description: 'get all receipts of related account',
+    http: {
+      path: '/getAllReceipts',
+      verb: 'GET',
+      status: 200,
+      errorStatus: 400
+    },
+    returns: {
+      type: 'object',
+      root: true
+    }
+  })
+
 }
