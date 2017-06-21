@@ -60,6 +60,12 @@
       "principalId": "admin",
       "permission": "ALLOW",
       "property": "publisherCheckout"
+    },
+    {
+      "principalType": "ROLE",
+      "principalId": "$authenticated",
+      "permission": "ALLOW",
+      "property": "getAllStatistics"
     }
   ],
   "methods": {}

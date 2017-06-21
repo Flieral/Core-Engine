@@ -284,9 +284,9 @@ module.exports = function (statistic) {
   })
 
   statistic.announcerCheckout = function (ctx, accountHashId, receiptData, cb) {
-    if (!ctx.args.options.accessToken)
+    if (!ctx.options.accessToken)
       return cb(new Error('missing accessToken'))
-    var url = utility.wrapAccessToken(announcerBaseURL + '/accessTokens/' + ctx.args.options.accessToken, app.announcerAccessToken)
+    var url = utility.wrapAccessToken(announcerBaseURL + '/accessTokens/' + ctx.options.accessToken, app.announcerAccessToken)
     requestHandler.getRequest(url, function (err, response) {
       if (err)
         return cb(err)
@@ -302,7 +302,7 @@ module.exports = function (statistic) {
       receipt.create(inputReceipt, function(err, model) {
         if (err)
           return cb(err)
-        url = utility.wrapAccessToken(announcerBaseURL + '/clients/'+ accountHashId + '/doRefinement' + ctx.args.options.accessToken, app.announcerAccessToken)
+        url = utility.wrapAccessToken(announcerBaseURL + '/clients/'+ accountHashId + '/doRefinement' + ctx.options.accessToken, app.announcerAccessToken)
         requestHandler.postRequest(url, {'blob': 'blob'}, function (err, response) {
           if (err)
             return cb(err)
@@ -346,4 +346,64 @@ module.exports = function (statistic) {
       type: 'object'
     }
   })
+
+  statistic.getAllStatistics = function (ctx, accountHashId, cb) {
+    if (!ctx.req.accessToken)
+      return cb(new Error('missing accessToken'))
+
+    if (ctx.req.accessToken.userId !== accountHashId)
+      return cb(new Error('missmatched accountHashId'))
+
+    statistic.find(function(err, result) {
+      if (err)
+        return cb(err, null)
+      var clickRes = []
+      var viewRes = []
+      var reportRes = []
+      for (var i = 0; i < result.length; i++)
+        if (result[i].announcerInfo.accountHashId === accountHashId) {
+          if (result[i].actionInfo.event === 'Click')
+            clickRes.push(result[i])
+          else if (result[i].actionInfo.event === 'View')
+            viewRes.push(result[i])
+          else if (result[i].actionInfo.event === 'Report')
+            reportRes.push(result[i])
+        }
+      var finalRes = {
+        view: viewRes,
+        click: clickRes,
+        report: reportRes
+      }
+      return cb(null, finalRes)
+    })
+  }
+
+  statistic.remoteMethod('getAllStatistics', {
+    accepts: [{
+      arg: 'ctx',
+      type: 'object',
+      http: {
+        source: 'context'
+      }
+    }, {
+      arg: 'accountHashId',
+      type: 'string',
+      required: true,
+      http: {
+        source: 'query'
+      }
+    }],
+    description: 'get all statistics of related account',
+    http: {
+      path: '/getAllStatistics',
+      verb: 'GET',
+      status: 200,
+      errorStatus: 400
+    },
+    returns: {
+      type: 'object',
+      root: true
+    }
+  })
+
 }
