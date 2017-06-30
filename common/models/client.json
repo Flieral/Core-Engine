@@ -7,9 +7,6 @@
   },
   "hidden": [
     "realm",
-    "emailVerified",
-    "announcerAccountModel",
-    "publisherAccountModel",
     "campaignList",
     "applicationList"
   ],
