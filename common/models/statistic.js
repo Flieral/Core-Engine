@@ -154,7 +154,7 @@ module.exports = function (statistic) {
     })
   })
 
-  statistic.getPublisherPayble = function (accountHashId, cb) {
+  statistic.getPublisherPayable = function (accountHashId, cb) {
     var transaction = app.models.transaction
     var filter = {
       'where': {
@@ -181,7 +181,7 @@ module.exports = function (statistic) {
     })
   }
 
-  statistic.remoteMethod('getPublisherPayble', {
+  statistic.remoteMethod('getPublisherPayable', {
     accepts: [{
       arg: 'accountHashId',
       type: 'string',
@@ -192,7 +192,7 @@ module.exports = function (statistic) {
     }],
     description: 'returns the amount of payable money for publisher checkout',
     http: {
-      path: '/getPublisherPayble',
+      path: '/getPublisherPayable',
       verb: 'GET',
       status: 200,
       errorStatus: 400
@@ -203,9 +203,11 @@ module.exports = function (statistic) {
     }
   })
 
-  statistic.publisherCheckout = function (accessToken, accountHashId, receiptData, transactionIds, cb) {
+  statistic.publisherCheckout = function (accessToken, accountHashId, data, cb) {
     if (!accessToken)
       return cb(new Error('missing accessToken'))
+    var receiptData = data.receiptData
+    var transactionIds = data.transactionIds
     var url = utility.wrapAccessToken(publisherBaseURL + '/clients/' + accountHashId + '/accessTokens/' + accessToken, accessToken)
     requestHandler.getRequest(url, function (err, response) {
       if (err)
@@ -256,14 +258,7 @@ module.exports = function (statistic) {
         source: 'query'
       }
     }, {
-      arg: 'receiptData',
-      type: 'object',
-      required: true,
-      http: {
-        source: 'body'
-      }
-    }, {
-      arg: 'transactionIds',
+      arg: 'data',
       type: 'object',
       required: true,
       http: {
